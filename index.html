@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ランダムメッセージアプリ</title>
+  <style>
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      font-family: "Yu Gothic", sans-serif;
+      background: #f5f7ff;
+      color: #1f2937;
+    }
+
+    .app {
+      width: min(92vw, 520px);
+      background: #ffffff;
+      border-radius: 12px;
+      padding: 22px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+      text-align: center;
+    }
+
+    h1 {
+      margin: 0 0 10px;
+      font-size: 1.5rem;
+    }
+
+    .message {
+      margin: 16px 0;
+      padding: 14px;
+      min-height: 54px;
+      border-radius: 10px;
+      background: #eef3ff;
+      line-height: 1.6;
+    }
+
+    button {
+      border: none;
+      border-radius: 999px;
+      padding: 10px 18px;
+      background: #2563eb;
+      color: #ffffff;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #1d4ed8;
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <h1>今日のひとこと</h1>
+    <p>ボタンを押すと、ランダムなメッセージが表示されます。</p>
+    <div id="message" class="message">まずはボタンを押してみましょう。</div>
+    <button id="showButton" type="button">メッセージを表示</button>
+  </main>
+
+  <script>
+    const messages = [
+      "わからない時は、ひとつ前の手順に戻ると解決しやすいです。",
+      "1日5分でも続けると、必ず前に進めます。",
+      "エラーは失敗ではなく、次に進むためのヒントです。",
+      "まず動く小さな形を作ると、学びやすくなります。",
+      "できたことを1つメモするだけでも自信につながります。"
+    ];
+
+    const button = document.getElementById("showButton");
+    const messageBox = document.getElementById("message");
+    let previousIndex = -1;
+
+    button.addEventListener("click", () => {
+      let index = Math.floor(Math.random() * messages.length);
+
+      if (messages.length > 1) {
+        while (index === previousIndex) {
+          index = Math.floor(Math.random() * messages.length);
+        }
+      }
+
+      previousIndex = index;
+      messageBox.textContent = messages[index];
+    });
+  </script>
+</body>
+</html>
