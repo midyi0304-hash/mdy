@@ -1,10 +1,228 @@
 <!DOCTYPE html>
-<html>
+<html lang="ja">
 <head>
-  <title>My First Page</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>簿記三級 練習問題アプリ</title>
+  <style>
+    :root { color-scheme: light; }
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background: #f3f6fb;
+      margin: 0;
+      padding: 24px;
+      color: #1f2937;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      box-shadow: 0 8px 24px rgba(15, 23, 42, 0.08);
+    }
+    h1 { margin-top: 0; }
+    .controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    button {
+      border: none;
+      border-radius: 8px;
+      padding: 10px 14px;
+      cursor: pointer;
+      background: #2563eb;
+      color: #fff;
+      font-weight: 700;
+    }
+    button.secondary { background: #334155; }
+    button:disabled { opacity: .4; cursor: not-allowed; }
+    .card {
+      border: 1px solid #e5e7eb;
+      border-radius: 10px;
+      padding: 16px;
+      margin: 14px 0;
+    }
+    .meta { color: #475569; font-size: .95rem; margin-bottom: 10px; }
+    .choices { display: grid; gap: 8px; margin-top: 10px; }
+    .choice {
+      border: 1px solid #d1d5db;
+      border-radius: 8px;
+      padding: 10px;
+      background: #fff;
+      text-align: left;
+      color: #111827;
+    }
+    .choice.correct { border-color: #16a34a; background: #ecfdf5; }
+    .choice.wrong { border-color: #dc2626; background: #fef2f2; }
+    .result { font-weight: 700; margin-top: 10px; }
+    .stats {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      font-size: 0.95rem;
+      color: #334155;
+      margin-bottom: 12px;
+    }
+  </style>
 </head>
 <body>
-  <h1>Hello GitHub</h1>
-  <p>はじめてのページです。</p>
+  <main class="container">
+    <h1>簿記三級 練習問題アプリ</h1>
+    <p>第1問100問・第2問50問・第3問50問を収録。ランダムで出題されます。</p>
+
+    <div class="controls">
+      <button data-section="1">第1問（100問）</button>
+      <button data-section="2">第2問（50問）</button>
+      <button data-section="3">第3問（50問）</button>
+      <button id="nextBtn" class="secondary" disabled>次の問題</button>
+    </div>
+
+    <div class="stats" id="stats"></div>
+    <section class="card" id="quizArea">上のボタンから問題区分を選んでください。</section>
+  </main>
+
+  <script>
+    const buildQuestions = (section, count) => {
+      const patterns = [
+        {
+          q: "現金売上 30,000円を計上した。正しい仕訳はどれか。",
+          choices: ["（借）売上 30,000 / （貸）現金 30,000", "（借）現金 30,000 / （貸）売上 30,000", "（借）当座預金 30,000 / （貸）売上 30,000", "（借）現金 30,000 / （貸）受取手形 30,000"],
+          answer: 1,
+          explanation: "現金売上は資産の増加（現金）と収益の増加（売上）です。"
+        },
+        {
+          q: "備品 50,000円を掛けで購入した。正しい仕訳はどれか。",
+          choices: ["（借）備品 50,000 / （貸）買掛金 50,000", "（借）買掛金 50,000 / （貸）備品 50,000", "（借）備品 50,000 / （貸）現金 50,000", "（借）消耗品費 50,000 / （貸）買掛金 50,000"],
+          answer: 0,
+          explanation: "掛け購入なので負債の買掛金が増加します。"
+        },
+        {
+          q: "買掛金 12,000円を現金で支払った。正しい仕訳はどれか。",
+          choices: ["（借）現金 12,000 / （貸）買掛金 12,000", "（借）買掛金 12,000 / （貸）現金 12,000", "（借）支払手形 12,000 / （貸）現金 12,000", "（借）買掛金 12,000 / （貸）当座預金 12,000"],
+          answer: 1,
+          explanation: "買掛金（負債）を減らし、現金（資産）を減らします。"
+        },
+        {
+          q: "決算で減価償却費 8,000円を計上した。正しい仕訳はどれか。",
+          choices: ["（借）減価償却累計額 8,000 / （貸）減価償却費 8,000", "（借）減価償却費 8,000 / （貸）備品 8,000", "（借）減価償却費 8,000 / （貸）減価償却累計額 8,000", "（借）備品 8,000 / （貸）減価償却累計額 8,000"],
+          answer: 2,
+          explanation: "費用計上とともに評価勘定（減価償却累計額）を増加させます。"
+        }
+      ];
+
+      return Array.from({ length: count }, (_, i) => {
+        const p = patterns[i % patterns.length];
+        return {
+          id: `${section}-${i + 1}`,
+          section,
+          no: i + 1,
+          question: `【第${section}問-${i + 1}】${p.q}`,
+          choices: p.choices,
+          answer: p.answer,
+          explanation: p.explanation
+        };
+      });
+    };
+
+    const questionBank = {
+      1: buildQuestions(1, 100),
+      2: buildQuestions(2, 50),
+      3: buildQuestions(3, 50)
+    };
+
+    const state = {
+      section: null,
+      current: null,
+      answered: 0,
+      correct: 0,
+      pool: []
+    };
+
+    const quizArea = document.getElementById("quizArea");
+    const stats = document.getElementById("stats");
+    const nextBtn = document.getElementById("nextBtn");
+
+    const shuffle = (arr) => [...arr].sort(() => Math.random() - 0.5);
+
+    const updateStats = () => {
+      if (!state.section) {
+        stats.textContent = "";
+        return;
+      }
+      const total = questionBank[state.section].length;
+      const rate = state.answered ? Math.round((state.correct / state.answered) * 100) : 0;
+      stats.innerHTML = `
+        <div>選択中: 第${state.section}問（全${total}問）</div>
+        <div>回答数: ${state.answered}</div>
+        <div>正解数: ${state.correct}</div>
+        <div>正答率: ${rate}%</div>
+      `;
+    };
+
+    const renderQuestion = () => {
+      if (!state.current) return;
+      const q = state.current;
+      quizArea.innerHTML = `
+        <div class="meta">問題ID: ${q.id}</div>
+        <h2>${q.question}</h2>
+        <div class="choices" id="choices"></div>
+        <div class="result" id="result"></div>
+      `;
+
+      const choicesEl = document.getElementById("choices");
+      const resultEl = document.getElementById("result");
+
+      q.choices.forEach((choice, idx) => {
+        const btn = document.createElement("button");
+        btn.className = "choice";
+        btn.textContent = `${idx + 1}. ${choice}`;
+        btn.onclick = () => {
+          const buttons = [...choicesEl.querySelectorAll("button")];
+          buttons.forEach((b) => (b.disabled = true));
+
+          if (idx === q.answer) {
+            btn.classList.add("correct");
+            state.correct += 1;
+            resultEl.textContent = `正解！ ${q.explanation}`;
+          } else {
+            btn.classList.add("wrong");
+            buttons[q.answer].classList.add("correct");
+            resultEl.textContent = `不正解。 ${q.explanation}`;
+          }
+
+          state.answered += 1;
+          updateStats();
+          nextBtn.disabled = false;
+        };
+        choicesEl.appendChild(btn);
+      });
+
+      nextBtn.disabled = true;
+    };
+
+    const nextQuestion = () => {
+      if (state.pool.length === 0) {
+        state.pool = shuffle(questionBank[state.section]);
+      }
+      state.current = state.pool.pop();
+      renderQuestion();
+      updateStats();
+    };
+
+    document.querySelectorAll("button[data-section]").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        state.section = Number(btn.dataset.section);
+        state.answered = 0;
+        state.correct = 0;
+        state.pool = shuffle(questionBank[state.section]);
+        nextQuestion();
+      });
+    });
+
+    nextBtn.addEventListener("click", nextQuestion);
+  </script>
 </body>
 </html>
